@@ -34,9 +34,11 @@ def softmax(z):
 def softmax_cross_entropy(logits, y):
     n = logits.shape[0]
     a = softmax(logits)
-    scores = a[range(n), y]
+    l = range(n)
+    scores = a[l, y]
     loss = -np.sum(np.log(scores)) / n
     return a, loss
+
 
 #  这里计算输出层 softmax_cross_entropy 的误差
 # logits 是经过线性变化的概率结果，大小为 (batch_size, output_size)
@@ -44,6 +46,6 @@ def softmax_cross_entropy(logits, y):
 def derivation_softmax_cross_entropy(logits, y):
     n = logits.shape[0]
     a = softmax(logits)
-    a[range(n), y] -= 1
+    l = range(n)
+    a[l, y] = a[l, y] - 1
     return a
-
