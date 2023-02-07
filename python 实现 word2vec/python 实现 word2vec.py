@@ -9,6 +9,7 @@ settings = {
     'learning_rate': 0.01  # 学习率
 }
 
+
 class word2vec:
     def __init__(self):
         """
@@ -74,7 +75,8 @@ class word2vec:
                 # 反向传播，更新参数
                 self.backprop(EI, h, w_t)
                 # 计算总损失
-                self.loss += -np.sum([u[word.index(1)] for word in w_c]) + len(w_c) * np.log(np.sum(np.exp(u)))
+                self.loss += -np.sum([u[word.index(1)] for word in w_c]) + len(w_c) * np.log(
+                    np.sum(np.exp(u)))
             print('Epoch:', i, "Loss:", self.loss)
 
     def forward(self, x):
@@ -98,8 +100,8 @@ class word2vec:
         反向传播，使用学习率更新权重参数
         """
         detal_dw2 = np.outer(h, e)
-        detal_h = np.dot(self.w2, e)
-        detal_dw1 = np.outer(x, detal_h)
+        error_h = np.dot(self.w2, e)
+        detal_dw1 = np.outer(x, error_h)
         self.w1 = self.w1 - (self.lr * detal_dw1)
         self.w2 = self.w2 - (self.lr * detal_dw2)
 
