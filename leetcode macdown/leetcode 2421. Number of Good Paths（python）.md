@@ -71,13 +71,53 @@ Note:
 
 返回不同良好路径的数量。请注意，路径与其反向路径被认为是同一路径。例如，0 -> 1 被视为与 1 -> 0 相同。单个节点也被视为有效路径。
 
+这道题我也是看了[大佬的讲解](https://www.bilibili.com/video/BV1ve411K7P5/?vd_source=66ea1dd09047312f5bc02b99f5652ac6)才想明白的，主要思路就是将这个树的问题转换成了图的问题，使用了并查集来解决该题。
+
+最开始我们将这棵树中的节点都单独拿出来，想象他们彼此都是没有联系的，此时也就是一个有 N 个节点的没有互相联系的图，此时已经有 N 条有用的路径出现了，加入到 result 中，也就是每个节点自身。然后由于每个有用的路径都是起始节点相同且大于等于中间的节点值，所以我们在图中最先找出现值最小的节点 x ，这样可以始终保证连通块的代表元的节点值是最大的。对于节点  x 及其邻居 y ，如果  y 所处的连通分量的最大节点值不超过 vals[x] ，那么可以把 y 所处的连通块合并到 x 所处的连通块中。如果此时这两个连通块的最大节点值相同，那么可以根据乘法原理，把这两个连通块内的等于最大节点值的节点个数相乘，加到答案 result 中，不断遍历累积计算最终得到结果。
+
+时间复杂度为 O(NlogN) ，空间复杂度为 O(N)。
+ 
+
 ### 解答
+
+	class Solution(object):
+	    def numberOfGoodPaths(self, vals, edges):
+	        """
+	        :type vals: List[int]
+	        :type edges: List[List[int]]
+	        :rtype: int
+	        """
+	        def find(x):
+	            if father[x] != x:
+	                father[x] = find(father[x])
+	            return father[x]
+	
+	        n = len(vals)
+	        graph = [[] for _ in range(n)]
+	        for x, y in edges:
+	            graph[x].append(y)
+	            graph[y].append(x)
+	        father = list(range(n))
+	        L = [1] * n
+	        result = n
+	        for val, x in sorted(zip(vals, range(n))):
+	            father_x = find(x)
+	            for y in graph[x]:
+	                y = find(y)
+	                if y == father_x or vals[y] > val:
+	                    continue
+	                if vals[y] == val:
+	                    result += L[father_x] * L[y]
+	                    L[father_x] += L[y]
+	                father[y] = father_x
+	        return result
 
 
 
 ### 运行结果
 
-
+	Runtime 1715 ms，Beats 88.69%
+	Memory 53.3 MB，Beats 18.35%
 
 ### 原题链接
 
