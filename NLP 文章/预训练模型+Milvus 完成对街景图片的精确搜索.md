@@ -41,7 +41,10 @@
             image = cv2.imread(filepath)
             image = cv2.resize(image,(224 ,224))
             ds.append([filename, image])
+部分图片效果如下，有原始图像还有经过旋转处理后面的图像。
 
+ 
+![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0d9191e2dcae490fbe7c803537d100f0~tplv-k3u1fbpfcp-watermark.image?)
 # 模型搭建
 
 这段代码定义了一个函数`ComputeModel()`，用于构建一个基于 MobileNet V2 的特征提取模型，并返回该模型。具体代码含义如下：
