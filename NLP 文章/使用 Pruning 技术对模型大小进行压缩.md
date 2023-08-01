@@ -58,11 +58,11 @@ Epoch 4/4
 # 使用剪枝技术微调训练好的模型
 
 
-这段代码使用 TensorFlow Model Optimization（tfmot）库中的剪枝（pruning）功能来对一个已有的 Keras 模型进行剪枝，并在剪枝后对修剪后的模型进行训练和评估。具体如下：
+这段代码使用 TensorFlow Model Optimization（tfmot）库中的剪枝（pruning）功能来对一个已有的 Keras 模型进行剪枝，并在剪枝后对修剪后的模型进行训练和评估。剪枝原理简单理解就是训练过程中，在迭代一定次数后，便将接近 0 的权重都置为 0 ，以达到对模型剪枝的作用，反复重复这个过程，直到模型权重达到目标的稀疏度。这样模型训练完成后，模型里面指定比例的权重皆为 0 ，当我们在后面进行压缩时，模型便可以得到很大程度的压缩空间，而且在推断过程中也减少了很多的计算量。具体如下：
 
 1.  导入所需的库：导入 `prune_low_magnitude` 函数，用于对模型进行剪枝。
 1.  定义剪枝相关参数：代码定义了用于剪枝的一些参数，包括 `batch_size`（批量大小）、`epochs`（训练周期）、`validation_split`（验证集拆分比例）等。`num_images` 计算了训练集中用于剪枝的图像数量。`end_step` 表示剪枝结束的步数，通过向上取整计算得到。
-1.  定义剪枝策略：使用 `tfmot.sparsity.keras.PolynomialDecay` 定义了剪枝策略，这是一种多项式衰减的剪枝策略。初始稀疏度为 0.50，最终稀疏度为 0.8，剪枝开始的步数为 0，结束的步数为之前计算得到的 `end_step`。
+1.  定义剪枝策略：使用 `tfmot.sparsity.keras.PolynomialDecay` 定义了剪枝策略，这是一种多项式衰减的剪枝策略。初始稀疏度为 0.50，最终稀疏度为 0.8，表示将模型从稀疏性 0.5 部分开始，到达到稀疏性为 0.8 时候结束，稀疏就代表着多少权重变成 0 。剪枝开始的步数为 0，结束的步数为之前计算得到的 `end_step`。训练中每隔一定频率修建一次模型，一般默认是 100 个 step 。
 1.  应用剪枝：通过调用 `prune_low_magnitude` 函数，将定义好的剪枝策略应用到原始的模型 `model` 上，得到一个修剪后的模型 `model_for_pruning`。
 1.  编译修剪后的模型：对修剪后的模型 `model_for_pruning` 调用 `compile` 方法，指定优化器为 Adam，损失函数为稀疏交叉熵（Sparse Categorical Crossentropy），并使用准确率作为评估指标。
 1.  定义回调函数：创建一个回调函数列表 `callbacks`，其中包含 `tfmot.sparsity.keras.UpdatePruningStep()` 回调函数，这个回调函数将在每个训练步骤中更新剪枝。
@@ -92,7 +92,7 @@ Epoch 4/4
     print('修剪测试准确率:', model_for_pruning_accuracy)
 ```    
     
-结果打印：
+结果打印，可以看到剪枝后的准确率只是下降了 0.005 左右：
 
 ```
 Epoch 1/2
@@ -108,7 +108,7 @@ Epoch 2/2
 这段代码用于计算和比较 TensorFlow 模型在压缩后的文件大小。具体如下：
 
 1.  `get_gzipped_model_size` 函数：这个函数用于计算文件的 gzip 压缩大小。它将传入的文件进行 gzip 压缩，然后返回压缩后的文件大小。
-1.  去除模型中的剪枝：使用 `tfmot.sparsity.keras.strip_pruning` 函数从 `model_for_pruning` 中去除不能训练的权重，得到一个新的模型 `model_for_export`。
+1.  去除模型中的剪枝：使用 `tfmot.sparsity.keras.strip_pruning` 函数从 `model_for_pruning` 中去除不能训练的权重，得到一个剪枝后的新模型 `model_for_export`。
 1.  保存修剪后的 Keras 模型：使用 `tf.keras.models.save_model` 函数将修剪后的 Keras 模型 `model_for_export` 保存到一个临时文件 `pruned_keras_file` 中。
 1.  转换并保存修剪后的 TFLite 模型：使用 `tf.lite.TFLiteConverter.from_keras_model` 将修剪后的 Keras 模型转换为 TFLite 格式，并将其保存到一个临时文件 `pruned_tflite_file` 中。
 1.  获取压缩后的文件大小：通过调用 `get_gzipped_model_size` 函数，分别计算基线 Keras 模型、修剪后的 Keras 模型和修剪后的 TFLite 模型在 gzip 压缩后的文件大小，并将结果打印出来。
@@ -137,7 +137,7 @@ Epoch 2/2
     print("gzip 压缩后的修剪后的 Keras 模型的大小: %.2f bytes" % (get_gzipped_model_size(pruned_keras_file)))
     print("gzip 压缩后的修剪后的 TFlite 模型的大小: %.2f bytes" % (get_gzipped_model_size(pruned_tflite_file)))
  ```
-结果打印：
+结果打印，可以看到经过剪枝的模型大小缩小了 3 倍左右：
 
 ```
 保存裁剪的 TFLite 模型到: C:\Users\13900K\AppData\Local\Temp\tmp2ul613rh.tflite
@@ -155,7 +155,6 @@ gzip 压缩后的修剪后的 TFlite 模型的大小: 24859.00 bytes
 1.  保存量化和剪枝后的 TFLite 模型：通过将 `quantized_and_pruned_tflite_model` 的内容写入临时文件 `quantized_and_pruned_tflite_file` 中，将量化和剪枝后的 TFLite 模型保存到该文件中。
 1.  打印模型文件大小：通过调用 `get_gzipped_model_size` 函数，分别计算基线 Keras 模型（`keras_file`）和量化和剪枝后的 TFLite 模型（`quantized_and_pruned_tflite_file`）在 gzip 压缩后的文件大小，并将结果打印出来。
  ```
-
     converter = tf.lite.TFLiteConverter.from_keras_model(model_for_export)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     quantized_and_pruned_tflite_model = converter.convert()
@@ -167,7 +166,7 @@ gzip 压缩后的修剪后的 TFlite 模型的大小: 24859.00 bytes
     print("gzipped 修剪和量化 TFlite 模型的大小: %.2f bytes" % (get_gzipped_model_size(quantized_and_pruned_tflite_file)))
 ```
 
-结果打印：
+结果打印，可以看到模型的大小缩小了 10 倍左右：
 
 ```
 将量化和修剪后的 TFLite 模型保存到: C:\Users\13900K\AppData\Local\Temp\tmpuajkil8d.tflite
@@ -210,7 +209,7 @@ gzipped 修剪和量化 TFlite 模型的大小: 8244.00 bytes
     print('修剪后的模型测试准确率:', model_for_pruning_accuracy)
     print('修剪和量化后的 TFLite 模型测试准确率:', test_accuracy)
 ```
-结果打印：
+结果打印，可以看到经过剪枝和量化后的准确率和之前相差无几：
 
 ```
 Evaluated on 0 results so far.
