@@ -124,4 +124,4 @@ Predicted Caption:  a dog is running through the water
 -   **语义准确性**：生成的描述应该准确传达图像的语义信息，确保生成的描述与图像内容一致，而不仅仅是表面的含糊其辞地特征。
 -   **数据量**：训练需要大规模的图像和文本数据，这在某些领域可能会受限。
 
- 
+ 详细实现过程可以看代码：https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwangdayaya%2FDP_2023%2Fblob%2Fmain%2FNLP%2520%25E6%2596%2587%25E7%25AB%25A0%2FImage%2520Captioning.py
