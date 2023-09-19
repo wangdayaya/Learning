@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 from keras import layers
 from tqdm import tqdm
-import tensorflow_datasets as tfds
-import tensorflow_addons as tfa
 
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 for gpu in gpus:
@@ -69,35 +67,6 @@ for image in train_ds.take(1):
         plt.imshow(image[i])
         plt.axis('off')
 plt.show()
-
-# ---------------------------
-# def train_preprocessing(x):
-#     img = x["image"]
-#     img = resize_and_rescale(img, size=(img_size, img_size))
-#     img = augment(img)
-#     return img
-#
-# dataset_name = "oxford_flowers102"
-# splits = ["train"]
-# (ds,) = tfds.load(dataset_name, split=splits, with_info=False, shuffle_files=True)
-# train_ds = (ds.map(train_preprocessing).batch(batch_size, drop_remainder=True).shuffle(batch_size * 2).prefetch(tf.data.AUTOTUNE))
-# plt.figure(figsize=(10, 10))
-# for image in train_ds.take(1):
-#     for i in range(1):
-#         plt.imshow(image[i].numpy())
-#         plt.axis('off')
-# plt.show()
-
-# ---------------------------
-#
-# train_ds = ds.map(train_preprocessing).batch(batch_size, drop_remainder=True).shuffle(batch_size * 2).prefetch(tf.data.AUTOTUNE)
-#
-# plt.figure(figsize=(10, 10))
-# for image in train_ds.take(1):
-#     for i in range(1):
-#         plt.imshow(image.numpy().astype('uint8'))
-#         plt.axis('off')
-# plt.show()
 
 
 class GaussianDiffusion:
