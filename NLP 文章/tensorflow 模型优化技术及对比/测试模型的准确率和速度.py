@@ -1,4 +1,5 @@
 import tempfile
+import threading
 import time
 import numpy as np
 import tensorflow as tf
@@ -54,39 +55,98 @@ def test1(file, test_images, test_labels):
         print(f'{file} 文件大小为 {size} 字节')
 
 
+# def evaluate_tfilte(file, test_images, test_labels):
+#     with open(file, 'rb') as f:
+#         model = f.read()
+#     interpreter = tf.lite.Interpreter(model_content=model)
+#     input_index = interpreter.get_input_details()[0]["index"]
+#     output_index = interpreter.get_output_details()[0]["index"]
+#     N = len(test_images)
+#     interpreter.resize_tensor_input(input_index, [N, 28, 28])
+#     interpreter.resize_tensor_input(output_index, [N])
+#     interpreter.allocate_tensors()
+#     test_images = test_images.astype(np.float32)
+#     predictions = []
+#     interpreter.set_tensor(input_index, test_images)
+#     start = time.time()
+#     interpreter.invoke()
+#     end = time.time()-start
+#     output = interpreter.tensor(output_index)
+#     predictions.extend(np.argmax(output(), axis=1))
+#     prediction_digits = np.array(predictions)
+#     accuracy = (prediction_digits == test_labels).mean()
+#     size = get_gzipped_model_size(file)
+#     print(f'{file.split(".")[0]} 准确率为 {accuracy}%')
+#     print(f'{file.split(".")[0]} 耗时 {end}s')
+#     print(f'{file.split(".")[0]} 文件大小为 {size} 字节')
+
+
+# def evaluate_tfilte(file, test_images, test_labels):
+#     with open(file, 'rb') as f:
+#         model = f.read()
+#     interpreter = tf.lite.Interpreter(model_content=model)
+#     input_index = interpreter.get_input_details()[0]["index"]
+#     output_index = interpreter.get_output_details()[0]["index"]
+#     interpreter.resize_tensor_input(input_index, [batch_size, 28, 28])
+#     interpreter.resize_tensor_input(output_index, [batch_size])
+#     interpreter.allocate_tensors()
+#     s = time.time()
+#     predictions = []
+#     test_images = test_images.astype(np.float32)
+#     for i in tqdm(range(0, len(test_images), batch_size)):
+#         batch = test_images[i:i + batch_size]
+#         interpreter.set_tensor(input_index, batch)
+#         interpreter.invoke()
+#         output = interpreter.tensor(output_index)
+#         predictions.extend(np.argmax(output(), axis=1))
+#     prediction_digits = np.array(predictions)
+#     accuracy = (prediction_digits == test_labels).mean()
+#     size = get_gzipped_model_size(file)
+#     print(f'{file.split(".")[0]} 准确率为 {accuracy}%')
+#     print(f'{file.split(".")[0]} 耗时 {time.time() - s}s')
+#     print(f'{file.split(".")[0]} 文件大小为 {size} 字节')
+
+
 def evaluate_tfilte(file, test_images, test_labels):
-    with open(file, 'rb') as f:
-        model = f.read()
-    interpreter = tf.lite.Interpreter(model_content=model)
-    input_index = interpreter.get_input_details()[0]["index"]
-    output_index = interpreter.get_output_details()[0]["index"]
-    interpreter.resize_tensor_input(input_index, [batch_size, 28, 28])
-    interpreter.resize_tensor_input(output_index, [batch_size])
-    interpreter.allocate_tensors()
-    start = time.time()
-    predictions = []
+    s = time.time()
+    results = [None] * (len(test_images) // batch_size)
+    threads = []
     test_images = test_images.astype(np.float32)
-    for i in tqdm(range(0, len(test_images), batch_size)):
-        batch = test_images[i:i + batch_size]
-        interpreter.set_tensor(input_index, batch)
+    def infer_thread(data, results, i):
+        with open(file, 'rb') as f:
+            model = f.read()
+        interpreter = tf.lite.Interpreter(model_content=model)
+        input_index = interpreter.get_input_details()[0]["index"]
+        output_index = interpreter.get_output_details()[0]["index"]
+        interpreter.resize_tensor_input(input_index, [batch_size, 28, 28])
+        interpreter.resize_tensor_input(output_index, [batch_size])
+        interpreter.allocate_tensors()
+        interpreter.set_tensor(input_index, data)
         interpreter.invoke()
         output = interpreter.tensor(output_index)
-        predictions.extend(np.argmax(output(), axis=1))
-    prediction_digits = np.array(predictions)
+        results[i] = np.argmax(output(), axis=1)
+    for i in tqdm(range(0, len(test_images), batch_size)):
+        batch = test_images[i:i + batch_size]
+        thread = threading.Thread(target=infer_thread, args=(batch, results, i//batch_size))
+        threads.append(thread)
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    prediction_digits = np.array([b for a in results for b in a])
     accuracy = (prediction_digits == test_labels).mean()
     size = get_gzipped_model_size(file)
     print(f'{file.split(".")[0]} 准确率为 {accuracy}%')
-    print(f'{file.split(".")[0]} 耗时 {time.time() - start}s')
+    print(f'{file.split(".")[0]} 耗时 {time.time() - s}s')
     print(f'{file.split(".")[0]} 文件大小为 {size} 字节')
-
 
 
 batch_size = 32
 N = len(test_images) // batch_size * batch_size
-test_images, test_labels = test_images[:batch_size], test_labels[:batch_size]
+test_images, test_labels = test_images[:N], test_labels[:N]
 test('基准模型.h5', test_images, test_labels)
-test('剪枝微调模型.h5', test_images, test_labels)
-test1('量化感知微调模型.h5', test_images, test_labels)
+# test('剪枝微调模型.h5', test_images, test_labels)
+# test1('量化感知微调模型.h5', test_images, test_labels)
 evaluate_tfilte('剪枝优化+轻量化模型.tflite', test_images, test_labels)
 evaluate_tfilte('量化感知优化+轻量化.tflite', test_images, test_labels)
 evaluate_tfilte('剪枝优化+量化感知优化+轻量化.tflite', test_images, test_labels)

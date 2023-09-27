@@ -26,6 +26,4 @@ model = keras.Sequential([
 
 model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 model.fit( train_images, train_labels, epochs=epochs, batch_size=batch_size, validation_split=0.1,)
-_, baseline_model_accuracy = model.evaluate(test_images, test_labels, verbose=0)
 tf.keras.models.save_model(model, '基准模型.h5', include_optimizer=False)
-print('Baseline test accuracy:', baseline_model_accuracy)

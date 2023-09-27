@@ -34,6 +34,7 @@ model_for_pruning = prune_low_magnitude(model, **pruning_params)
 model_for_pruning.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 callbacks = [tfmot.sparsity.keras.UpdatePruningStep(), ]
 model_for_pruning.fit(train_images, train_labels, batch_size=batch_size, epochs=epochs, validation_split=validation_split, callbacks=callbacks)
+model_for_pruning.evaluate(test_images, test_labels)
 # ———————————轻量化+量化后的模型———————————
 model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
 converter = tf.lite.TFLiteConverter.from_keras_model(model_for_export)
