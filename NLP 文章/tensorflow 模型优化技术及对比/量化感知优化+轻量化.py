@@ -31,5 +31,5 @@ q_aware_model.fit(train_images, train_labels, batch_size=batch_size, epochs=epoc
 converter = tf.lite.TFLiteConverter.from_keras_model(q_aware_model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 quantized_tflite_model = converter.convert()
-with open('量化优化+轻量化模型.tflite', 'wb') as f:
+with open('量化感知优化+轻量化.tflite', 'wb') as f:
     f.write(quantized_tflite_model)

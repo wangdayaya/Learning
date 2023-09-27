@@ -39,5 +39,5 @@ model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
 converter = tf.lite.TFLiteConverter.from_keras_model(model_for_export)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 quantized_and_pruned_tflite_model = converter.convert()
-with open('剪枝优化+量化优化+轻量化.tflite', 'wb') as f:
+with open('剪枝优化+量化感知优化+轻量化.tflite', 'wb') as f:
     f.write(quantized_and_pruned_tflite_model)
