@@ -1,17 +1,20 @@
-from transformers import AutoTokenizer
-from transformers import TFAutoModelForQuestionAnswering
-from tensorflow import keras
-from datasets import load_dataset
-import tensorflow as tf
+# 前言
 
-gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
-datasets = load_dataset("squad")
-model_checkpoint = "distilbert-base-cased"
-tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-max_length = 384
-doc_stride = 128
+问答是一个经典的 NLP 任务，有多种实际应用的形式。 如下面列举出来的两种常见形式：
+
+- 每个问题都提供可能答案的列表，模型只需要返回`答案选项的概率分布`，这种一般比较简单。 
+- 给定一个输入`文档`（俗称上下文）和一个`有关该文档的问题`，并且它必须提取文档中`包含答案的文本范围`。 在这种情况下，模型不是计算答案选项的概率分布，而是计算文档文本中标记的`两个概率分布`，对应表示包含答案的范围的`开始位置`和`结束位置`。这种问答称为“提取式问答”。
+
+一般来说提取式问答的模型需要`非常庞大的数据`来从头训练，但是使用强大的`预训练基础模型`开始可以将数据集大小减少多个数量级，并且能取得令人满意的效果。本文介绍的是在轻量级 BERT 模型 `distilbert 模型`上进行微调来完成简单的问答任务。
+
+
+# 数据
+
+在将这些文本输入模型之前，我们需要对它们进行预处理。 这是由 `Transformers Tokenizer` 完成的，它将输入的文本转化为 `token id` ，并生成其他输入供 bert 模型使用。为此，我们使用 AutoTokenizer.from_pretrained 方法从 `distilbert-base-cased` 实例我们的分词器，这将确保我们得到一个与我们想要使用的预训练模型模型 distilbert 架构相对应的分词器。 
+
+下面代码主要是数据处理过程，每个样本将 `context` 和 `question` 作为输入，将 `answer` 在输入的 `token 序列`中的起始位置 `start_positions` 和结束位置 `end_positions` 标记出来，如果 `answer` 在输入的 token 序列中不存在，则将起始位置 start_positions 和结束位置 end_positions 都标记为 ```cls_token_id``` 在序列中的索引位置。
+
+```
 def prepare_train_feature(examples):
     examples["question"] = [q.lstrip() for q in examples["question"]]
     examples["context"] = [c.lstrip() for c in examples["context"]]
@@ -49,36 +52,49 @@ def prepare_train_feature(examples):
                     token_end_index -= 1
                 tokenized_examples["end_positions"].append(token_end_index + 1)
     return tokenized_examples
-
-
 tokenized_datasets = datasets.map(prepare_train_feature, batched=True, remove_columns=datasets["train"].column_names)
 train_set = tokenized_datasets["train"].with_format("numpy")[:]
 validation_set = tokenized_datasets["validation"].with_format("numpy")[:]
+```
+
+
+
+
+# 模型
+
+我们选择了轻量级的`distilbert`，它是著名的 BERT 语言模型的一个较小的蒸馏版本。 但是如果任务需要更高的准确率，并且有足够 GPU 来处理它，那么可以使用更大的模型，如 `roberta-large` 。
+
+
+使用 `TFAutoModelForQuestionAnswering` 类从 Hugging Face Transformers 库中加载预训练的问答模型 ```distilbert-base-cased```。使用 TensorFlow 的混合精度 `mixed_float16` 进行训练，这有助于在相同计算资源下加速模型的训练。另外配置 `Adam` 优化器，设置学习率为 `5e-5`，然后使用 `compile` 方法将模型编译，最后将模型权重保存成 h5 模型，以供测试需要。
+
+训练需要 16G 作用的显存，耗时总共 20 分钟左右。
+
+```
 model = TFAutoModelForQuestionAnswering.from_pretrained(model_checkpoint)
 keras.mixed_precision.set_global_policy("mixed_float16")
 optimizer = keras.optimizers.Adam(learning_rate=5e-5)
 model.compile(optimizer=optimizer)
 model.fit(train_set, validation_data=validation_set, epochs=2)
 model.save_weights("QA.h5")
+```
 
+模型输入：
+```
+question: 'Keras is an API designed for human beings, not machines. Keras follows best practices for reducing cognitive load: it offers consistent & simple APIs, it minimizes the number of user actions required for common use cases, and it provides clear & actionable error messages. It also has extensive documentation and developer guides. '
+answer: What is Keras?
+```
 
-# 加载模型时候使用
-# model.load_weights("QA.h5")
+预测结果为：
 
+    it offers consistent & simple APIs
 
-def qa(context, question):
-    inputs = tokenizer([context], [question], return_tensors="np")
-    outputs = model(inputs)
-    start_position = tf.argmax(outputs.start_logits, axis=1)
-    end_position = tf.argmax(outputs.end_logits, axis=1)
-    print(int(start_position), int(end_position))
-    answer = inputs["input_ids"][0, int(start_position): int(end_position) + 1]
-    print(answer)
-    print(tokenizer.decode(answer))
+可以看出，模型的问答效果初具效果。
 
+# 发展
 
-qa('Architecturally, the school has a Catholic character. Atop the Main Building\'s gold dome is a golden statue of the Virgin Mary. Immediately in front of the Main Building and facing it, is a copper statue of Christ with arms upraised with the legend "Venite Ad Me Omnes". Next to the Main Building is the Basilica of the Sacred Heart. Immediately behind the basilica is the Grotto, a Marian place of prayer and reflection. It is a replica of the grotto at Lourdes, France where the Virgin Mary reputedly appeared to Saint Bernadette Soubirous in 1858. At the end of the main drive (and in a direct line that connects through 3 statues and the Gold Dome), is a simple, modern stone statue of Mary.', 'To whom did the Virgin Mary allegedly appear in 1858 in Lourdes France?')   # Saint Bernadette Soubirous
-qa('Keras is an API designed for human beings, not machines. Keras follows best practices for reducing cognitive load: it offers consistent & simple APIs, it minimizes the number of user actions required for common use cases, and it provides clear & actionable error messages. It also has extensive documentation and developer guides. ', 'What is Keras?')
-qa('The College of Engineering was established in 1920, however, early courses in civil and mechanical engineering were a part of the College of Science since the 1870s. Today the college, housed in the Fitzpatrick, Cushing, and Stinson-Remick Halls of Engineering, includes five departments of study – aerospace and mechanical engineering, chemical and biomolecular engineering, civil engineering and geological sciences, computer science and engineering, and electrical engineering – with eight B.S. degrees offered. Additionally, the college offers five-year dual degree programs with the Colleges of Arts and Letters and of Business awarding additional B.A. and Master of Business Administration (MBA) degrees, respectively.', 'The College of Science began to offer civil engineering courses beginning at what time at Notre Dame?')   # the 1870s
+当前的问答任务，主要已经逐渐放弃了 BERT 这种“小模型”，而是使用参数量越来越大的大模型，其中以 ChatGPT 最为出色，但是究其架构细节，仍然是在 Transformer 基础上搭建而成的，只是额外加入了 SFT 和强化学习的步骤来使其更加符合人类的问答习惯而已。
+
+# 参考
+
 
 
