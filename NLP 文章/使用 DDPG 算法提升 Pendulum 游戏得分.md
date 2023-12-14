@@ -35,7 +35,7 @@
 经典的 Pendulum 控制问题。 这个问题很难使用 Q-Learning 算法来解决，因为动作是连续的而不是离散的，也就是说，我们必须从 -2 到 +2 的无限动作中选择一个实数作为力矩来控制小棒的摆动，尽量保证小棒尽量一直保持竖直向上，这样可以持续得分，最后得分越高越好。
 
 
-![pendulum .gif](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d950fcdeee1340c1b561ce2d62644f72~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=456&h=326&s=582949&e=gif&f=74&b=ffffff)
+<p align=center><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d950fcdeee1340c1b561ce2d62644f72~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=456&h=326&s=582949&e=gif&f=74&b=ffffff" alt="pendulum .gif"  /></p>
 
 
 1. **动作空间** 
@@ -162,3 +162,6 @@ def update_target(target_weights, weights, tau):
 
 # 参考
 
+- https://github.com/wangdayaya/DP_2023/blob/main/NLP%20%E6%96%87%E7%AB%A0/Deep%20Deterministic%20Policy%20Gradient%20(DDPG).py
+- https://hrl.boyuai.com/chapter/2/ddpg%E7%AE%97%E6%B3%95
+- https://juejin.cn/post/7311343196628959259
