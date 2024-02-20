@@ -134,4 +134,4 @@ for epoch in range(epochs):
 
 
 # 参考
-
+https://github.com/wangdayaya/DP_2023/blob/main/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/Character-level%20text%20generation%20with%20LSTM.py
