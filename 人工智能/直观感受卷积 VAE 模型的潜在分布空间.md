@@ -58,7 +58,7 @@ decoder_outputs = tf.keras.layers.Conv2DTranspose(1, 3, activation='sigmoid', st
 decoder = tf.keras.Model(latent_inputs, decoder_outputs, name='decoder')
 ```
 
-这段代码就是将上面的 `encoder` 和 `decoder` 两个部分组合起来创建 `VAE 类`，主要定义了训练过程中的损失函数，也就是上面提到的 `reconstruction_loss` 和 `kl_loss` 的和。`reconstruction_loss` 是输入图片和解码器重建图片的均方误差损失， `kl_loss` 是潜在空间分布和标准高斯分布（零均值和单位方差）之间的 KL 散度，最终损失函数就是这两个损失的总和。
+这段代码就是将上面的 `encoder` 和 `decoder` 两个部分组合起来创建 `VAE 类`，主要定义了训练过程中的损失函数，也就是上面提到的 `reconstruction_loss` 和 `kl_loss` 的和。`reconstruction_loss` 是输入图片和解码器重建图片的均方损失， `kl_loss` 是潜在空间分布和标准高斯分布（零均值和单位方差）之间的 KL 散度，最终损失函数就是这两个损失的总和。
 
 ```
 class VAE(tf.keras.Model):
@@ -110,6 +110,22 @@ vae.compile(optimizer='adam')
 callbacks = [tf.keras.callbacks.EarlyStopping(patience=3)]
 vae.fit(mnist_digits, epochs=30, batch_size=128, callbacks=callbacks)
 ```
+日志打印：
+
+    Epoch 1/30
+    547/547 [==============================] - 114s 2ms/step - loss: 285.0059 - reconstruction_loss: 216.4261 - kl_loss: 4.6019
+    Epoch 2/30
+    547/547 [==============================] - 1s 2ms/step - loss: 178.1703 - reconstruction_loss: 169.7719 - kl_loss: 4.4494
+    Epoch 3/30
+    547/547 [==============================] - 1s 2ms/step - loss: 168.2746 - reconstruction_loss: 162.4766 - kl_loss: 4.7840
+    ...
+    Epoch 28/30
+    547/547 [==============================] - 2s 4ms/step - loss: 153.3385 - reconstruction_loss: 147.1945 - kl_loss: 5.8508
+    Epoch 29/30
+    547/547 [==============================] - 2s 4ms/step - loss: 153.0213 - reconstruction_loss: 147.0176 - kl_loss: 5.8779
+    Epoch 30/30
+    547/547 [==============================] - 2s 4ms/step - loss: 152.6355 - reconstruction_loss: 146.9703 - kl_loss: 5.8860
+
 
 # 生成效果展示
 
@@ -119,8 +135,8 @@ vae.fit(mnist_digits, epochs=30, batch_size=128, callbacks=callbacks)
 通过观察这个图像，可以发现潜在空间中不同区域的图像表现出的特征和分布规律。对照下图直观来说就是：
 
 - 每个数字都有自己的集中分布区域
-- 相邻区域的数字具有相近的特征，比如 0 和 6 的分布区域，2 和 3 的分布区域等
-- 不相近的数字则分布相距较远，比如 6 和 9 的分布区域，2 和 8 的分布区域
+- 相邻区域的数字具有相近的特征，比如 9 和 8 的分布区域，3 和 2 的分布区域等
+- 不相近的数字则分布相距较远，比如 6 和 9 的分布区域，2 和 1 的分布区域
 - 在图像相邻分布区域接壤过程中会有`图像渐变的平滑过渡过程`
 
 这种平滑的过渡在生成模型中具有重要意义：
@@ -157,8 +173,8 @@ def plot_latent_space(vae, n=40, figsize=15):
 ```
 
  
-
-![image.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fca1e85675f740c3bc0fa380e5763560~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=1500&h=1500&s=1197602&e=png&b=f8f8f8)
+ 
+![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/519cb5ddb89545a6b80e0e8b43a9105e~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=1500&h=1500&s=1078006&e=png&b=090909)
 
 # 参考
 
