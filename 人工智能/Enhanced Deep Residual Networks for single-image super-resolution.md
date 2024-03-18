@@ -1,35 +1,12 @@
-import os
-
-import numpy
-import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
-from PIL import Image
 from tensorflow import keras
 from keras import layers
-from tqdm import tqdm
 
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
-#
-#
-# def load_images_from_directory(directory):
-#     image_list = []
-#     for filename in tqdm(os.listdir(directory)[:3]):
-#         filepath = os.path.join(directory, filename)
-#         with Image.open(filepath) as img:
-#             image_array = np.array(img)
-#             image_list.append(image_array)
-#     return image_list
-#
-#
-# DIV2K_train_HR = load_images_from_directory('.\\DIV2K\\DIV2K_train_HR')
-# DIV2K_train_LR_bicubic = load_images_from_directory('.\\DIV2K\\DIV2K_train_LR_bicubic\\X4')
-# DIV2K_valid_HR = load_images_from_directory('.\\DIV2K\\DIV2K_valid_HR')
-# DIV2K_valid_LR_bicubic = load_images_from_directory('.\\DIV2K\\DIV2K_valid_LR_bicubic\\X4')
-#
 
 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -64,17 +41,6 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
                           highres_width: highres_width + hr_crop_size]
     return lowres_img_cropped, highres_img_cropped
 
-# def dataset_object(X, Y, training=True):
-#     for x, y in zip(X, Y):
-#         x, y, = random_crop(x, y, scale=4)
-#     if training:
-#         for x, y in zip(X, Y):
-#             x, y = random_rotate(x, y)
-#             x, y = flip_left_right(x, y)
-#     return X, Y
-#
-
-# dataset_object(DIV2K_train_HR, DIV2K_train_LR_bicubic)
 def dataset_object(dataset_cache, training=True):
     ds = dataset_cache.map(lambda lowres, highres: random_crop(lowres, highres, scale=4), num_parallel_calls=AUTOTUNE)
     if training:
