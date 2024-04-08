@@ -1,0 +1,129 @@
+杭州市有多少个地下车行通道###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%车行通道%'
+杭州市有多少地下车行通道###SELECT COUNT(*) FROM dxtdpy where tdlx like '%车行通道%';
+杭州市有多少地下人行通道###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%人行通道%'
+杭州市地下人行通道的数量###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%人行通道%'
+杭州市人行通道有多少个###SELECT count(*) FROM dxtdpy where tdlx like '%人行通道%'
+杭州市地下人行通道有多少个###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%人行通道%'
+全市地下人行通道有多少个###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%人行通道%'
+全市有多少个轨道交通###SELECT COUNT(*) FROM dtzpt
+杭州市轨道交通的个数###SELECT COUNT(*) FROM dtzpt
+杭州市轨道交通有多少###SELECT COUNT(*) FROM dtzpt
+杭州市有多少个轨道交通###SELECT COUNT(*) FROM dtzpt
+杭州市有多少个地下人行通道###SELECT COUNT(*) FROM dxtdpy WHERE tdlx LIKE '%人行通道%'
+全市有多少个公共人防工程###SELECT COUNT(*) FROM rfgcpy
+杭州市有多少个公共人防工程###SELECT COUNT(*) FROM rfgcpy
+全市西湖区地下管线总长度###SELECT SUM(length) FROM gxssln WHERE ssqx LIKE '%西湖区%'
+杭州市西湖区地下管线总长度###SELECT SUM(length) FROM gxsspy WHERE ssqx LIKE '%西湖区%'
+杭州市长输管线的长度是###SELECT sum(length) FROM gxssln WHERE pipeline_type like '%长输%';
+全市长输管线的有多少###SELECT count(*) FROM gxssln WHERE pipeline_type like '%长输%';
+杭州市有多少工业管线###SELECT COUNT(*) FROM gxssln WHERE pipeline_type LIKE '%工业%'
+萧山区地下管线、管廊总长度是###SELECT COALESCE((SELECT SUM(length) FROM gxssln WHERE ssqx like '%萧山%'),0) + COALESCE((SELECT SUM(length) FROM gxsspy WHERE ssqx like '%萧山%'),0) AS total_length;
+杭州市有多长的地下管线管廊###SELECT COALESCE((SELECT SUM(length) FROM gxssln),0) + COALESCE((SELECT SUM(length) FROM gxsspy),0) AS total_length;
+西湖区地下管线管廊总长度是###SELECT COALESCE((SELECT SUM(length) FROM gxssln WHERE ssqx like '%西湖%'),0) + COALESCE((SELECT SUM(length) FROM gxsspy WHERE ssqx like '%西湖%'),0) AS total_length;
+杭州市地下管线管廊的长度是###select COALESCE((select SUM(length) from gxssln),0) + COALESCE((select SUM(length) from gxsspy),0) as total_length;
+杭州市富阳区地下管线管廊总长度是###SELECT COALESCE((SELECT SUM(length) FROM gxssln WHERE ssqx like '%富阳%'),0) + COALESCE((SELECT SUM(length) FROM gxsspy WHERE ssqx like '%富阳%'),0) AS total_length;
+杭州市临安区地下管线管廊总长度是###SELECT COALESCE((SELECT SUM(length) FROM gxssln WHERE ssqx like '%临安%'),0) + COALESCE((SELECT SUM(length) FROM gxsspy WHERE ssqx like '%临安%'),0) AS total_length;
+杭州市临安区其他地下市政设施总个数是### select ((SELECT coalesce(Count(*),0) from dxtdpy WHERE ssqx LIKE '%临安%') + (SELECT coalesce(Count(*),0) from rfgcpy WHERE ssqx LIKE '%临安%') + (SELECT COUNT(*) from dxtcpy WHERE ssqx LIKE '%临安%')) as total;
+拱墅区、上城区、临安区地下人行通道的总数分别是###select ssqx,count(*) from dxtdpy where (ssqx like '%拱墅%' or ssqx like '%上城%' or ssqx like '%临安%') and tdlx like '%人行%' group by ssqx
+萧山哪些管线超过500米了###SELECT * FROM gxssln WHERE ssqx LIKE '%萧山%' and length > 500;
+临平区负责的管线有哪些###select * from gxssln where gxssln.qsdw like '%临平区%'
+西湖区去年在管线计划上投资了多少###SELECT SUM(total_invest) FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND years = CAST((EXTRACT(YEAR FROM CURRENT_DATE) - 1) AS VARCHAR);
+西湖区去年在管线工程上投资了多少###SELECT SUM(total_invest) FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND years = CAST((EXTRACT(YEAR FROM CURRENT_DATE) - 1) AS VARCHAR);
+西湖区去年在管线上投资了多少###SELECT SUM(total_invest) FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND years = CAST((EXTRACT(YEAR FROM CURRENT_DATE) - 1) AS VARCHAR);
+第二长的管线是哪个建设单位做的###select jsdw from gxssln order by length DESC limit 1 offset 1
+杭州市电热力管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%电热力%'
+杭州市不明管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%不明%'
+杭州市地下综合管廊的长度###SELECT SUM(length) FROM gxsspy
+2024年地下管线管廊工程的长度是###SELECT sum(length) FROM biz_prj_plan WHERE years like '%2024%' AND plan_type in (1,2,3,4)
+2024年地下管线管廊的长度是###SELECT sum(length) FROM biz_prj_plan WHERE years like '%2024%' AND plan_type in (1,2,3,4)
+西湖区没有完成2022年的任务的管线是哪几条###SELECT *  FROM biz_prj_plan, jsonb_array_elements(annual_aim_json::jsonb) AS aim WHERE (aim->>'year')::int = 2022  AND (aim->>'planProgress')::int >biz_prj_plan.current_progress  AND years LIKE '%2022%'  AND plan_type IN (1,2,3)
+2024年杭州市管线建设计划总数是###SELECT COUNT(*) FROM biz_prj_plan WHERE years LIKE '%2024%' AND plan_type in (1,2,3)
+2023年管廊建设计划执行情况###SELECT current_progress, count(*) FROM biz_prj_plan WHERE years LIKE '%2023%' AND plan_type = 4 group by current_progress
+去年完成了多少管线计划###SELECT COUNT(*) FROM biz_prj_plan, jsonb_array_elements(annual_aim_json::jsonb) AS aim WHERE (aim->>'year')::int = EXTRACT(year FROM CURRENT_DATE) - 1 AND (aim->>'planProgress')::int <= current_progress AND years = cast((EXTRACT(year FROM CURRENT_DATE) - 1) as VARCHAR);
+帮我查一下杭州市最长的管线的施工单位###SELECT sgdw FROM gxssln ORDER BY length DESC LIMIT 1;
+萧山区最长的管线的施工单位是哪个###SELECT sgdw FROM gxssln WHERE ssqx LIKE '%萧山区%' ORDER BY length DESC LIMIT 1
+滨江区年龄最大的管线是哪根###SELECT *  FROM gxssln  WHERE ssqx LIKE '%滨江区%'  ORDER BY gl DESC LIMIT 1
+文三路上有哪些管线###SELECT * FROM gxssln WHERE dlmc LIKE '%文三路%'
+莫干山路下有几个污水管###SELECT COUNT(*) FROM gxssln WHERE dlmc LIKE '%莫干山路%' AND pipeline_type LIKE '%污水%';
+计算管种细分类型为电力的各种详细管材的总长度，并将结果按照总长度升序排列，最多返回10条记录###SELECT gcxx, SUM(length) AS total_length FROM gxssln WHERE pipeline_type LIKE '%电力%' GROUP BY gcxx ORDER BY total_length ASC LIMIT 10
+文三路下面的污水管线有几公里###SELECT SUM(length)/1000 FROM gxssln WHERE dlmc like '%文三路%' AND pipeline_type like '%污水%'
+文三路下面的污水管线列出来###SELECT * FROM gxssln WHERE dlmc LIKE '%文三路%' AND pipeline_type LIKE '%污水%'
+不同年代的管线分别多少条,###SELECT msnd, COUNT(*)  FROM gxssln  GROUP BY msnd
+不同埋设年代的管线分别多少条###SELECT msnd, COUNT(*)  FROM gxssln  GROUP BY msnd
+文三路上有哪些管线###SELECT * FROM gxssln WHERE dlmc like '%文三路%'
+2023年西湖区单独施工管线计划有多少个###select count(*) from biz_prj_plan where years like '%2023%' and ssqx like '%西湖区%' and plan_type=1
+哪些管线在文三路上###SELECT * FROM gxssln WHERE dlmc LIKE '%文三路%'
+查找10条审核通过的工程计划###select * from biz_prj_plan where verify_status=1 limit 10
+余杭区哪些路上有管线###SELECT DISTINCT dlmc FROM gxssln WHERE ssqx LIKE '%余杭%'
+查找10条审核通过的工程计划###select * from biz_prj_plan where verify_status=1 limit 10
+管龄10年以下的低风险管线有哪些###SELECT * FROM gxssln WHERE gl <= 10 AND tyaqpjdj = 1
+临平区负责的管线有哪些###SELECT * FROM gxssln WHERE ssqx LIKE '%临平区%'
+查找10条审核通过的工程计划###select * from biz_prj_plan where verify_status=1 limit 10
+杭州市人行通道有多少个###SELECT COUNT(*) FROM dxtdpy
+西湖区去年在管线上投资了多少###SELECT SUM(total_invest) FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND years = '2022';
+杭州市人行通道有多少个###SELECT COUNT(*) FROM dxtdpy
+杭州市人行通道有多少个###SELECT COUNT(*) FROM dxtdpy
+西湖区2023年在管线上投资了多少###SELECT SUM(total_invest) FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND years LIKE '%2023%' and plan_type in (1,2,3)
+2023年西湖区在不同用途的管线上投资了多少###SELECT pipeline_type,SUM(total_invest)  FROM biz_prj_plan WHERE years like '%2023%' AND ssqx LIKE '%西湖区%' group by pipeline_type
+2023年西湖区在给水管线上投资了多少###SELECT SUM(total_invest)  FROM biz_prj_plan  WHERE years like '%2023%'  AND ssqx LIKE '%西湖区%'  AND pipeline_type LIKE '%给水%'
+2023年西湖区在不同类型的管线上分别投资了多少###SELECT pipeline_type,SUM(total_invest)  FROM biz_prj_plan WHERE years like '%2023%' AND ssqx LIKE '%西湖区%' group by pipeline_type
+最长的管线是哪个建设单位做的###SELECT jsdw FROM gxssln ORDER BY length DESC LIMIT 1
+文三路下面的污水管线列出来###SELECT * FROM gxssln WHERE dlmc like '%文三路%' AND pipeline_type like '%污水%'
+2023年西湖区单独施工管线计划有多少个###select count(*) from biz_prj_plan where years like '%2023%' and ssqx like '%西湖区%' and plan_type=1
+文三路下面的污水管线有几根###SELECT COUNT(*) FROM gxssln WHERE dlmc like '%文三路%' AND pipeline_type like '%污水%'
+滨江区的管线由哪些单位负责###SELECT DISTINCT duty_party FROM biz_prj_plan WHERE ssqx LIKE '%滨江区%' AND plan_type IN (1, 2, 3)
+西湖区哪些工程计划已经被审核成功###SELECT *  FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND verify_status = 1
+查一下审核成功的工程计划###select * from biz_prj_plan where verify_status = 1
+查一下西湖区审核成功的工程计划###SELECT * FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' AND verify_status = 1
+西湖区不同工程类型的工程计划数量有多少###SELECT plan_type, COUNT(*)  FROM biz_prj_plan WHERE ssqx LIKE '%西湖区%' GROUP BY plan_type
+西湖区不同工程计划的不同工程进度的数量有多少###SELECT plan_type, current_progress, COUNT(*)  FROM biz_prj_plan  WHERE ssqx LIKE '%西湖区%'  GROUP BY plan_type, current_progress  ORDER BY plan_type, current_progress
+2024里已经投运的管线有多长###SELECT SUM(length) FROM biz_prj_plan WHERE current_progress = 5 AND years LIKE '%2024%' and plan_type in (1,2,3)
+第二长的管线是哪个建设单位做的，有多少公里###select jsdw,length/1000 as length from gxssln order by length DESC limit 1 offset 1
+杭州市有多少电力管线###SELECT count(*) FROM gxssln WHERE pipeline_type LIKE '%电力%'
+杭州市电力管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%电力%'
+杭州市不明管线的长度###SELECT SUM(length) FROM gxssln WHERE dlmc LIKE '%不明%'
+杭州市热力管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%热力%'
+杭州市长输管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%长输%'
+地铁1号线开挖深度大于5米的区间有多少个###select count(dtqjmc) from dtqjln where ssxlmc like '%1号线%' and jsskwsd>5
+杭州市地下综合管廊的长度###SELECT SUM(length) FROM gxsspy
+给我10条西湖区的正在续建的工程计划###select * from biz_prj_plan where ssqx like '%西湖区%' and current_progress=3 limit 10
+杭州市不明管线的长度###SELECT SUM(length) AS total_length FROM gxssln WHERE  pipeline_type LIKE '%不明%'
+有哪些地铁站面积超过100平方米###SELECT zdmc FROM dtzpt WHERE ST_Area(ST_Transform(geom, 4549)) > 100
+给我找10条地下车行通道的数据###select * from dxtdpy where tdlx like '%车行通道%' limit 10
+杭州市工业管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type like '%工业管线%'
+云象隧道的建设单位和设计单位是哪个###SELECT jsdw, sjdw FROM dxtdpy WHERE dxtdmc LIKE '%云象隧道%'
+钱江路下面的管线有多长###SELECT SUM(length) FROM gxssln WHERE dlmc like '%钱江路%'
+杭州市通讯管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%通讯%'
+西湖区在2022年管线计划一共多长###SELECT SUM(length) FROM biz_prj_plan WHERE ssqx like '%西湖区%' and years LIKE '%2022%' and plan_type IN (1,2,3)
+杭州市通信管线的长度###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%通信%'
+2023年西湖区单独施工管线计划有多少个###select count(*) from biz_prj_plan where years like '%2023%' and ssqx like '%西湖区%' and plan_type=1
+查找10条审核通过的工程计划，需要工程名称、更新时间、工程状态###select project_name, update_time, current_progress from biz_prj_plan where verify_status=1 limit 10
+给我十条已经汇交竣工实测数据的工程计划###select * from biz_prj_plan where sgfw_data_status=3 limit 10
+查找10条已经开工的工程计划###select * from biz_prj_plan where current_progress=2 limit 10
+查找10条正在续建的工程计划###select * from biz_prj_plan where current_progress=3 limit 10
+2023年计划的管廊工程的数据一共有多少条###SELECT COUNT(*)  FROM biz_prj_plan WHERE years LIKE '%2023%' AND plan_type = 4
+哪些地铁站周围有中风险管线设施###SELECT DISTINCT zdmc FROM dtzpt WHERE EXISTS ( SELECT 1 FROM gxssln WHERE ST_DWithin(ST_Transform(dtzpt.geom, 4549), ST_Transform(gxssln.geom, 4549), 500) AND tyaqpjdj = 2);
+2024年管线项目年度总投资金额为###SELECT SUM(total_invest) FROM biz_prj_plan WHERE years LIKE '%2024%' and plan_type in (1,2,3)
+2024年管廊项目年度总投资金额为###SELECT SUM(total_invest) FROM biz_prj_plan WHERE years LIKE '%2024%' AND plan_type = 4
+全市哪个施工单位下属的管廊最长###SELECT sgdw FROM gxsspy ORDER BY length DESC LIMIT 1;
+查找10条审核通过的工程计划，需要工程名称、更新时间、工程状态###select project_name, update_time, current_progress from biz_prj_plan where verify_status=1 limit 10
+全市哪个单位设计的管廊最长###SELECT sjdw FROM gxsspy ORDER BY length DESC LIMIT 1;
+有多长的管廊权属于中铁三局###SELECT SUM(length) FROM gxsspy WHERE qsdw like '%中铁三局%'
+查看西湖区里计划内被审核通过的工程计划名字###select project_name from biz_prj_plan where ssqx like '%西湖区%' and verify_status=1 and plan_category=1
+有多长的管线权属于中国联通杭州分公司###SELECT SUM(length) FROM gxssln WHERE qsdw like '%中国联通杭州分公司%'
+第二长的管线是哪个建设单位做的，有多少公里###select jsdw,length/1000 as length from gxssln order by length DESC limit 1 offset 1
+10条已经采纳的工程计划###select * from biz_prj_plan where accept=1 limit 10
+平炼路到康桥路共有多少燃气工程###SELECT COUNT(*) FROM biz_prj_plan WHERE start_end_point like '%平炼路%'  AND start_end_point like '%康桥路%' AND pipeline_type LIKE '%燃气%'
+杭州市长输管线的长度是###SELECT SUM(length)  FROM gxssln WHERE pipeline_type LIKE '%长输%'
+杭州市有多少长输管线###SELECT COUNT(*) FROM gxssln WHERE pipeline_type LIKE '%长输%'
+杭州市有多少工业管线###SELECT COUNT(*) FROM gxssln WHERE pipeline_type LIKE '%工业%'
+杭州市工业管线的长度是###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%工业%'
+杭州市热力管线的长度是###SELECT SUM(length) FROM gxssln WHERE pipeline_type LIKE '%热力%'
+杭州市地下综合管廊的长度是###SELECT SUM(length) FROM gxsspy 
+地铁湘湖站的geom###SELECT geom FROM dtzpt WHERE zdmc LIKE '%湘湖%'
+计划在2022年完工的管线有多长###SELECT SUM(length)  FROM biz_prj_plan, jsonb_array_elements(annual_aim_json::jsonb) AS aim WHERE (aim->>'year')::int = 2022  AND (aim->>'planProgress')::int = 4 AND years LIKE '%2022%'  AND plan_type IN (1,2,3)
+杭州是有多少个区###SELECT COUNT(DISTINCT ssqx) as total_districts FROM biz_prj_plan
+2023年西湖区单独施工管线计划有多少个###select count(*) from biz_prj_plan where years like '%2023%' and ssqx like '%西湖区%' and plan_type=1
+
+
+
