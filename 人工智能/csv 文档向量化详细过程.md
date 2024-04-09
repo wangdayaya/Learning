@@ -8,7 +8,7 @@
 ```
 chunk_overlap = 50
 chunk_size = 250
-embed_model = 'bge-large-zh-v1.5'
+embed_model = 'm3e-large'
 vs_type = 'fassi'
 zh_title_enhance = False
 ```
@@ -17,7 +17,7 @@ zh_title_enhance = False
 
 1.  `chunk_overlap = 50`: `chunk_overlap` 是指在进行文本分块时，每个块之间的重叠量。在处理文本时，通常将文本分成多个块以便更有效地处理，而重叠量可以确保在相邻的块之间不会丢失重要的信息。在这个例子中，重叠量为 50，表示相邻块之间会有 50 个字符的重叠。
 1.  `chunk_size = 250`： `chunk_size` 是指每个文本块的大小。将长文本分成适当大小的块有助于更高效地处理文本数据。在这里每个文本块的大小为 250 个字符。
-1.  `embed_model = 'bge-large-zh-v1.5'`： `embed_model` 是指用于文本嵌入（embedding）的模型。文本嵌入是将文本数据转换成向量的过程，通常用于表示文本数据。在这里，使用了名为 `'bge-large-zh-v1.5'` 的嵌入模型。
+1.  `embed_model = 'm3e-large`： `embed_model` 是指用于文本嵌入（embedding）的模型。文本嵌入是将文本数据转换成向量的过程，通常用于表示文本数据。在这里，使用了名为 `m3e-large` 的嵌入模型。
 1.  `vs_type = 'fassi'`： `vs_type` 是向量数据库名称。
 1.  `zh_title_enhance = False`： `zh_title_enhance` 是一个布尔值，用于指示是否要增强中文标题。当设置为 `True` 时，表示对中文标题进行增强处理；当设置为 `False` 时，表示不进行增强处理。
 
@@ -80,8 +80,12 @@ def __read_file(self, csvfile: TextIOWrapper) -> List[Document]:
 ```
 # 向量化
 
-选择合适的向量化模型和向量化数据库，将得到的 docs 列表转为向量存入数据库中即可，后续即可完成基于 csv 的文档问答任务。
+ 
+随便找一个可以使用的向量模型，我这里使用的是 `m3e-large` ，另外还有找自己合适的向量数据库，我这里使用的是 `fassi` ，将上面处理好的 chunk 都经过向量化存入 fassi 中，后面结合大模型即可即可进行文档的问答和检索。
 
+这里将每一行的文本都转换为一个 1024 长的向量，然后存入到 fassi 向量数据库中，下面是我查询的展示效果。通过提问，可以将文档内的内容回答出来，并且将答案的出处都标识出来。
+
+![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/80f2eb0f96a5484a9185ca72abd3b493~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=1403&h=845&s=168180&e=png&b=fdfdfd)
 
 
 # 参考
