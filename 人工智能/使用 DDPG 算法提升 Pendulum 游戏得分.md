@@ -109,6 +109,17 @@ def policy(state, noise_object):
 
 <p align=center><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/71b389486c894afe8fb1dfba11ffb989~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=553&h=401&s=189075&e=png&b=fdfbfb" alt="image.png"  /></p>
 
+ 
+### 更新 `critic_model` 时使用 `target_actor` 和 `target_critic` 的原因
+
+
+在训练 Critic 时，使用 `target_actor` 和 `target_critic` 可以减少训练过程中的方差和过度估计问题。因为样本来源于历史数据，使用更新较慢的目标网络能提供了一个更稳定的价值估计，有助于训练的稳定性，另外使用目标网络，可以避免评论家对当前策略过于敏感，从而减少过度拟合。
+ 
+
+### 更新 `actor_model` 时不使用目标网络的原因
+
+在 Actor-Critic 方法中， Actor 的目标是改进策略。为了实现这一点，演员需要根据当前 Critic 的评价来更新自己的策略。如果使用目标评论家来更新演员，那么演员的更新将基于一个滞后的价值估计，这可能会阻碍策略的改进。
+
 
 需要注意的是，我们不仅要训练 critic 和 actor ，另外还要定期更新 target_critic 和 target_actor 。
 ```
