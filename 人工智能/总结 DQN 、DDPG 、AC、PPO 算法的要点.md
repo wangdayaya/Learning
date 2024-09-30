@@ -208,7 +208,8 @@ critic：预计在未来收到的所有奖励的总和。
         critic_losses = []
         for log_prob, value, ret in history:
             # ret，折扣回报，其实就是每个 step 的真实的未来加权奖励得分
-            # value，模型预测回报，或者说是每个 step 预测的未来加权奖励得分
+            # value，模型预测回报，或者说是每个 step 预测的状态价值
+            # 表示回报和价值估计之间的差异
             diff = ret - value
             actor_losses.append(-log_prob * diff)  # actor loss
             critic_losses.append( huber_loss(ops.expand_dims(value, 0), ops.expand_dims(ret, 0)) )

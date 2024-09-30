@@ -30,7 +30,7 @@
 
 ## 架构图
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/5868c10aae7c431f92ffdf0a45e369a8~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727747821&x-orig-sign=9ro88Uuyl1I%2Bvzga6uORs2%2BVMyg%3D)
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/5868c10aae7c431f92ffdf0a45e369a8~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=QN2QWAJywrn3piugY0Tsuiw%2F9u4%3D)
 
 我们可以回看源代码中的[奖励模型](https://github.com/microsoft/DeepSpeedExamples/blob/master/applications/DeepSpeed-Chat/dschat/utils/model/reward_model.py)的具体实现，这里主要介绍它的输出和训练过程。需要注意的是这份奖励模型代码后面在 `PPO 算法优化阶段`被使用到，创建出两个一样的副本模型 `reward_model 和 critic_model` ，只是它们的所输出的值有所不同。
 
@@ -71,13 +71,13 @@
 
 整个 `PPO` 算法，涉及到`四个模型`，其中 `actor_model 和 ref_model` 一开始初始化都是第一阶段 `SFT` 模型的相同副本，只不过下面只更新 `actor_model`，但是强化学习过程很容易把模型训练“坏”，因此需要另外一个**参数不会更新或者某种策略慢更新**（如：直接 copy 或者 EMA 等策略）的 `ref_model` 来当作标的，别让 `actor mode` 跑偏太远。 `reward_model 和 critic_model` 一开始初始化都是第二阶段奖励模型的相同副本，只不过下面只更新 `critic_model` 。在这个图中没有画出来 `critic model` ，但是实际上在代码实现中是存在的。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/ac69db4a791848b991d379f46a947cf1~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727747821&x-orig-sign=YxnXC%2BqmX1Jj8avT%2FQ4cyF%2Fqzkg%3D)
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/ac69db4a791848b991d379f46a947cf1~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=B09WFhPWmq%2B7i7vrXaDypkyizFg%3D)
 
 ## 训练模式和推理模式
 
 `LLM` 的训练模式使用 `teacher force` 的方式，将整句话输入到模型中，并通过 `mask` 机制在保证不泄漏未来的单词情况下预测下一个单词。推理模式是真正的自回归，预测出下一个单词之后，当作下一步输入再预测下下一个单词。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/92cb5a055829446cb09ffa129479c0d9~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727747821&x-orig-sign=n%2FBSusR00B8V9p72I6fa85YIBwk%3D)
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/92cb5a055829446cb09ffa129479c0d9~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=qsERNP8Wsr9ZPyXx2PAEOJer6lo%3D)
 
 ## PPO 算法需要的输入
 
@@ -134,7 +134,7 @@
         out_seq = torch.cat(out_seq, dim=0)  # concat output in the batch dim
         return out_seq
 
-将上面得到的部分结果传入 `compute_rewards` 中用于计算奖励，我们在**训练模式**下，将 prompt+answer 分别输入到 `actor_model` 和 `ref_model` ，用 `KL散度` 来衡量  `actor_model` 和 `ref_model` 输出的差别，也就是数据分布差距大小。同时将 `KL散度` 纳入 `损失函数` （KL散度本质是纳入到奖励值里边的，奖励值被纳入到了损失函数），进而来约束  `actor_model` 和 `ref_model` 的输出分布别差距太大。
+将上面得到的部分结果传入 `compute_rewards` 中用于计算奖励。上面我们制作数据的时候，是在**训练模式**下，将 `prompt+answer` 分别输入到 `actor_model` 和 `ref_model` ，得到的结果转为 `logprobs` 和 `ref_logprobs` 传入 `compute_rewards` 中用 `KL散度` 来衡量  `actor_model` 和 `ref_model` 输出的差别，也就是数据分布差距大小。同时将 `KL散度` 纳入 `损失函数` （KL散度本质是纳入到奖励值里边的，奖励值被纳入到了损失函数），进而来约束  `actor_model` 和 `ref_model` 的输出分布别差距太大。
 
     def compute_rewards(self, prompts, log_probs, ref_log_probs, reward_score, action_mask):
         #  log_probs 经过 log 变化，因此减法就对应除法
@@ -150,9 +150,11 @@
             rewards[j, start:ends[j]][-1] += reward_clip[j]
         return rewards
 
-有了上面的 `rewards` 和 `values` ，我们就可以算 PPO 需要的优势值和回报值，又不懂的同学可以先学些[这个概念及公式](https://huggingface.co/blog/deep-rl-a2c)，V 对应的就是 `critic_model` 的输出。
+这里解释一下为什么会使用**优势函数**，其实收集一条完整轨迹并计算折扣回报，来进行后续的计算也是可以的，这种方法的优点是**无偏的**。因为我们不估计回报，我们使用的是获得的真实回报。但问题是**方差很大**，因为由于环境的随机性和策略的随机性，相同的起始状态可能导致非常不同的回报。**解决方案是使用大量轨迹数据** ，希望任何一条轨迹引入的方差总体上都会减少，并提供对回报的“真实”估计。然而，增加批次大小会显著**降低样本效率**。所以我们需要找到额外的机制来减少方差，也就是**优势函数**。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/8ad9eb06123248859dd9730afac77750~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727747821&x-orig-sign=6qeBeDnv9rgpyA6CAaLsvvVvEe8%3D)
+有了上面的 `rewards` 和 `values` ，我们就可以算 PPO 需要的优势值和回报值，有不懂的同学可以先学[这个概念及公式](https://huggingface.co/blog/deep-rl-a2c)，这里我们需要的是 Q 和 V 两个值函数，我们可以使用 `TD error` 来估计优势函数，这里的 `V` 对应的就是 `critic_model` 的输出。
+
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/8ad9eb06123248859dd9730afac77750~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=oL4Odr1jQ%2BUH55eKw11VyFA6PcY%3D)
 
     def get_advantages_and_returns(self, values, rewards, start):
         # values（B，L） critic_model 输出、 rewards（B，L）reward 包含kl散度、 start answer开始的位置
@@ -177,11 +179,11 @@
 
 有了上面的所有值，我们就可以使用 PPO 算法计算  `actor_model` 的损失，我们可以对照下图的李宏毅老师的 公式 PPT 看代码。最后算出来的其实模型的策略梯度的损失。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/0bb3bd3113e447e4a9e0bd5dda3133f8~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727747821&x-orig-sign=XhR1%2FOjxPufqxGj1V%2F4HYPZK3Jg%3D)
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/0bb3bd3113e447e4a9e0bd5dda3133f8~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=k5HH6CDJwOZ2WbSXexl%2FcZoszZ0%3D)
 
 原始论文算法如下图：
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/62eb1415183540758f22b5dd25462dd3~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=e9ecf3d6&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1727229431&x-orig-sign=oX%2B1sILJ9v%2Byu4QG%2F4tMDtw4wqk%3D)
+![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/62eb1415183540758f22b5dd25462dd3~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1728197074&x-orig-sign=PYM%2FN4Mmv%2F8c%2FBY95EXKfjlUqj0%3D)
 
     def actor_loss_fn(self, logprobs, old_logprobs, advantages, mask):
         # policy gradient loss， 都是经过log变化的单词概率，这里相当于在做概率除法
