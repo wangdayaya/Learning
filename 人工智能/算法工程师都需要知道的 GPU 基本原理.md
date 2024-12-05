@@ -33,14 +33,12 @@
 
 下面是 A100 的主要参数，我们可以看到对于对 FP32 Tensor Core 能达到 19.5TFLOPS，它的计算公式如下，先知道如何计算，等学习了后面的知识再回过来很容易搞懂了。
 
-```
-频率 * SM 数量 * 每个 SM 的 FP32 Tensor Cores 数量 * 2 (后面乘 2 是因为乘加视作两次浮点运算)
-=1.41 GHz * 108 * 64 * 2
-=19491.84 GFLOPS
-=19.5 TFLOPS
-```
+    频率 * SM 数量 * 每个 SM 的 FP32 Tensor Cores 数量 * 2 (后面乘 2 是因为乘加视作两次浮点运算)
+    =1.41 GHz * 108 * 64 * 2
+    =19491.84 GFLOPS
+    =19.5 TFLOPS
 
-<p align="center"><img src="https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/b3f33a1ed8da442eb047d79a32075dc1~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=QLSplMK%2F%2FatXy157kU4r0uQsvzU%3D" alt=""></p>
+<p align="center"><img src="https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/b3f33a1ed8da442eb047d79a32075dc1~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=IREl3%2FIo%2BB91kVZB8LVj%2FC6HuEY%3D" alt=""></p>
 
 ## GPU 架构
 
@@ -51,17 +49,17 @@
 | 参数                            | CPU(Intel 酷睿 i9 14900K参数) | GPU（A100）        |
 | ----------------------------- | ------------------------- | ---------------- |
 | 核心数量                          | 24个                       | 6912 个 FP32 Core |
-| 3456 个 FP64 Core              |                           |                  |
-| 6912 个 Mixed INT32/FP32 cores |                           |                  |
+|              |                           |       3456 个 FP64 Core           | 
+|  |                           |    6912 个 Mixed INT32/FP32 cores              |
 | 线程数量                          | 32                        | 13824            |
 
 下面是[ A100 显卡的架构图](https://hl8xut0wpb.feishu.cn/docx/B4oXdRbq7o8p59xEIwycNsOVnlJ#share-SWzYddDbSo99AcxyhElcO1GTnhd)，从下图我们可以看出来，中间占据了几乎大部分的就是 GA100 芯片，总共有 128 个 SM 。A100 基于 GA100 ，但是稍微有点不同，只有具有 108 个 SM。中间还有所有 SM 共享的 40MB 的 L2 Cache 。图片两边边缘的部分才是我们常说的芯片外的显存，也就是 HBM ，常见的有 40G 和 80G 两种规格。上边缘是 PCIE 接口负责和主板通讯，下边缘是 NVLink 接口负责多卡通讯。
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/9887e4ecc6dd48b2b43c4694e6485590~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=HB0YsvQ8uzTYmXZC1bdXCcia40c%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/9887e4ecc6dd48b2b43c4694e6485590~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=cTUvYZRbqEScFMT6krRIwDNUCYU%3D)
 
 不同位置的带宽和计算强度如下图所示。可以看到 L1 传输速度最快，PCIe 传输速度慢的离谱，所以英伟达才会做出来多卡之间相互访问的 NVLink 加速传输数据，这对分布式训练很有用。基本上我们最理想状态就是从 L1 缓存中读取数据，充分利用 GPU 进行计算。
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/b57c73bfdd53450986f666b2d53678a4~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=LD7QmHWLQV4%2BXX7Dh2P%2B0etJ2P0%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/b57c73bfdd53450986f666b2d53678a4~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=V4C70l0D5%2BsUrety3RE22f%2Bo9Uw%3D)
 
 ## SM 结构
 
@@ -79,7 +77,37 @@ SM 就是 SM Streaming Multiprocessor，又叫流式多处理器，从下面的�
 10. 每个 SM 中包含 16 个 LD/ST ，又叫 Load/store Units ，负责数据的加载和存储。
 11. 每个 SM 中包含 4 个 SFU ，又叫 Special Function Units，负责处理特殊数学函数和复杂的计算操作，例如三角函数(sin、cos)、指数函数(exp)、对数函数(log)以及平方根(sqrt)等
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/80f715dacce448279988d99db6b5bd19~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=yWalxvrfUigUbLZYIJM89Ulc1AY%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/80f715dacce448279988d99db6b5bd19~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=VU4sIVM5MUWnvhlh4SFK1qVWQTo%3D)
+
+## FP32 Core
+
+这里单独介绍 FP32 Core（单精度浮点核心） ，其他类型的 Core 类似，它是 SM 内部专门负责执行单精度浮点运算（FP32） 的硬件模块。
+
+### FP32 Core 的主要功能
+
+1.  执行单精度浮点运算（FP32）: FP32 Core 是专门设计来执行 32 位浮点数运算 的核心单元。
+2.  支持并行计算: 一个 SM 内包含64个 FP32 核心，这些核心可以同时执行计算，从而大幅提高吞吐量。 每个核心独立计算，SM 中的指令调度器负责将任务分发到每个 FP32 Core 。
+3.  执行 Warp 的计算任务: 每个 Warp（32 个线程） 的任务由这些 FP32 核心处理。 一个 SM 内部的 64 个 FP32 Core 能够同时处理 2 个 Warp。
+4.  支持 CUDA 指令的浮点运算部分: FP32 Core 直接对应 CUDA 指令中涉及 单精度浮点数 的部分，比如 浮点加法或 浮点乘法。
+5.  辅助其他核心模块协作运算: 在执行复杂计算任务（如矩阵乘法）时，FP32 Core 可以与 Tensor Core、INT32 Core、FP64 Core 等协同工作，完成任务中涉及单精度浮点计算的部分。
+
+### **举例说明**
+
+假设我们有一个矩阵乘法任务：
+
+$C[i, j] = \sum_{k=0}^{N-1} A[i, k] \times B[k, j]$
+
+1.  每个乘法和加法操作都可以分配给 FP32 Core 。
+
+2.  很多个 **FP32 Core** 可以并行处理矩阵中多个元素的计算。
+
+例如：
+
+*   Core 1 负责 C\[0,0] 的计算；
+
+*   Core 2 负责 C\[0,1] 的计算；
+
+*   Core 3 负责 C\[0,2] 的计算，依此类推。
 
 ## GPU 计算强度
 
@@ -87,7 +115,7 @@ SM 就是 SM Streaming Multiprocessor，又叫流式多处理器，从下面的�
 
 一般认为，当任务的计算强度高于此值的时候，也就是程序被认为是计算受限（compute-bound）；如果低于此值，则为内存受限（memory-bound） 。如下图所示 A100 的计算强度为 100 （19500 \* 8 /1555 =100） ，也就是说任务的计算强度低于这个数 GPU 就会空闲，不过好在现在的大模型需要的计算量很大，一般只会不够用，而不是跑不满。
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/01be26da032d47f6a563f1e86dc7f36e~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=TmYuZO9JknTVtRUFZJOLScVJuBo%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/01be26da032d47f6a563f1e86dc7f36e~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=CLbfMJ3NgIEeCJn%2BpK0IA3bm5r4%3D)
 
 假设对于两个 N\*N 矩阵进行矩阵乘法运算，结果矩阵里的每个元素，都会经历 N 次乘和N次加，共2N次计算，最后总共计算结束计算量为 2N^3 ，传输数据也就是两个矩阵本身，就是 2N^2 ，计算量是传输量的 N 倍。这样我们就可以根据计算强度来调整 N 来充分利用GPU的计算能力。当数据传输较慢的时候我们可以传输较大的矩阵，数据传输较快的时候我们可以传输较小的矩阵。
 
@@ -95,8 +123,8 @@ SM 就是 SM Streaming Multiprocessor，又叫流式多处理器，从下面的�
 
 当前显卡相较于以前最大的改动就是加入了 Tensor Core ，它是专为深度学习设计的张量核心，它的设计初衷就是为了解决深度学习中大量矩阵的乘法和加法计算，目的就是用于矩阵运算和混合精度计算。可以在一个时钟周期内完成一个矩阵乘法和一个矩阵加法，如下图所示，计算乘法的两个矩阵 A 和 B 要求是 FP16 ，而加法的两个矩阵 C 和 D可以是 FP16 ，也可以是 FP32 。
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/d7e63da6517643a3a556ce7b371f2cad~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=mJsdnIEiXpgFSYVrG46CO1PTzps%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/d7e63da6517643a3a556ce7b371f2cad~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=kvKP1%2FOjETybPW4VkQqev0XnbOo%3D)
 
 具体混合精度内部的计算原理如图所示，两个 FP16 的输入进行全精度乘法，然后使用 FP32 累加器与一个 FP32 输入进行累加计算，最后输出一个 FP32 结果。使用 FP32 累加计算应该是为了保证精度不损失。
 
-![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/dfb30bbfa21f4cfa95d4891b3f80490a~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732699635&x-orig-sign=hZLApWpTt2dTgh7nf4MDVm6i%2FOU%3D)
+![](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/dfb30bbfa21f4cfa95d4891b3f80490a~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5oiR5piv546L5aSn5L2g5piv6LCB:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiNTM2MjE3NDA1ODk1MTQ5In0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1732757182&x-orig-sign=O4bsNU2wZMg2JnTo5L98dvmxE8w%3D)
